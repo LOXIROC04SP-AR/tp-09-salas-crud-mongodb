@@ -1,0 +1,44 @@
+<h2>Lista de reservas</h2>
+
+<% if (mensaje) { %>
+  <div class="mensaje"><%= mensaje %></div>
+<% } %>
+
+<% if (reservas.length === 0) { %>
+  <p>No hay reservas registradas.</p>
+<% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th>Estudiante</th>
+        <th>Email</th>
+        <th>Sala</th>
+        <th>Fecha</th>
+        <th>Turno</th>
+        <th>Personas</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% reservas.forEach(function(reserva) { %>
+        <tr>
+          <td><%= reserva.estudiante %></td>
+          <td><%= reserva.email %></td>
+          <td><%= reserva.sala %></td>
+          <td><%= reserva.fecha %></td>
+          <td><%= reserva.turno %></td>
+          <td><%= reserva.personas %></td>
+          <td><%= reserva.estado %></td>
+          <td>
+            <a href="/reservas/<%= reserva.id %>" class="btn">Ver</a>
+            <a href="/reservas/<%= reserva.id %>/editar" class="btn">Editar</a>
+            <form action="/reservas/<%= reserva.id %>?_method=DELETE" method="POST" style="display:inline">
+              <button type="submit" class="btn-elimina" onclick="return confirm('¿Seguro que desea eliminar esta reserva?')">Eliminar</button>
+            </form>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<% } %>
