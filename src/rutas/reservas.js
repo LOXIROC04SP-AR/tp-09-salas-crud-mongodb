@@ -2,7 +2,6 @@ const express = require("express");
 const {
   prepararAreaReservas,
   validarReservaFormulario,
-  validarEstado,
 } = require("../middleware/reservas");
 
 function crearRouterReservas(controlador) {
@@ -10,6 +9,7 @@ function crearRouterReservas(controlador) {
 
   router.use(prepararAreaReservas);
 
+  // Lectura y creacion (conservadas de la unidad anterior).
   router.get("/", controlador.listar);
   router.get("/nueva", controlador.formulario);
   router.get("/:id", controlador.detalle);
@@ -18,20 +18,6 @@ function crearRouterReservas(controlador) {
     express.urlencoded({ extended: false }),
     validarReservaFormulario,
     controlador.crear,
-  );
-
-  router.put(
-    "/:id",
-    prepararAreaReservas,
-    validarReservaFormulario,
-    validarEstado,
-    controlador.actualizar,
-  );
-
-  router.delete(
-    "/:id",
-    prepararAreaReservas,
-    controlador.eliminar,
   );
 
   return router;

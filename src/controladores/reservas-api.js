@@ -1,4 +1,4 @@
-// Controlador de la API JSON. Contiene lógica de acceso a datos.
+// Controlador de la API JSON. Contiene logica de acceso a datos.
 function crearControladorApi(servicio) {
   return {
     async listar(req, res) {
@@ -15,14 +15,28 @@ function crearControladorApi(servicio) {
       res.status(201).location(`/api/reservas/${reserva.id}`).json(reserva);
     },
 
+    // PUT: reemplazo completo con los siete campos, mismo ID.
     async actualizar(req, res) {
-      const reserva = await servicio.actualizar(req.params.id, req.reservaValidada);
+      const reserva = await servicio.reemplazar(
+        req.params.id,
+        req.reservaValidada,
+      );
+      res.status(200).json(reserva);
+    },
+
+    // PATCH: cambio parcial de personas/estado, campos omitidos conservados.
+    async actualizarParcial(req, res) {
+      const reserva = await servicio.actualizarParcial(
+        req.params.id,
+        req.reservaValidada,
+      );
       res.status(200).json(reserva);
     },
 
     async eliminar(req, res) {
       await servicio.eliminar(req.params.id);
-      res.status(204).json({ mensaje: "Reserva eliminada" });
+      // 204 sin cuerpo: no se envia JSON aunque el metodo lo permita.
+      res.status(204).end();
     },
   };
 }

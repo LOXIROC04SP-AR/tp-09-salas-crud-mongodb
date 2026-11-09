@@ -1,101 +1,202 @@
-TRABAJO PRÁCTICO 09 - Salas HTTP - MongoDB
+TRABAJO PRÁCTICO 09 - Actualización y eliminación de reservas de salas
+======================================================================
 
 PDF: semana-09-trabajo-practico-09
-Titulo: Trabajo practico 09 - Actualización y eliminación de reservas de salas
+Curso: Desarrollo back-end con Node.js - Unidad 9
+Base: reservas_salas_u9 - Colección: reservas
 
-OBJETIVO IMPLEMENTADO:
-Este trabajo práctico corresponde a la unidad 9 del curso, basado en el PDF
-`semana-09-trabajo-practico-09` con el título: "Trabajo practico 09 - Actualización y eliminación de reservas de salas".
+ORIGEN DE LA COPIA
+------------------
+Copia funcional del TP 08 (CRUD parcial de reservas con Express 5 + Mongoose +
+MongoDB Atlas). Se conservaron fuentes, manifiesto, lockfile, plantilla de
+entorno (.env.example) y configuración de calidad. El archivo .env (privato)
+no se entrega.
 
-El objetivo fue añadir funcionalidades de actualización y eliminación de reservas
-de salas al sistema existente (tp-08), que ya contaba con:
-- Creación de reservas
-- Listado de reservas
-- Validación de formularios
+VERSIONES UTILIZADAS
+--------------------
+- Node.js >= 20.6.0 (uso de --env-file)
+- Express 5.2.x
+- Mongoose 9.11.x
+- EJS 6 / express-ejs-layouts 2.5
+- Morgan 1.12 (registro HTTP)
+- Prettier 3 y ESLint 10 (flat config: eslint.config.js)
 
-QUE SE IMPLEMENTÓ en tp-09:
+PREPARACIÓN DEL ENTORNO
+-----------------------
+1) npm install
+2) Copiar .env.example a .env y completar MONGODB_URI con el cluster propio:
 
-1. FUNCIONALIDAD DE ACTUALIZACIÓN (PUT)
-   - Endpoint: PUT /reservas/:id (HTML) y PUT /api/reservas/:id (JSON)
-   - Permite modificar reservas existentes cambiando campos como: estudiante, email,
-     sala, fecha, turno, personas, estado
-   - Validación parcial de campos (solo los que se proporcionen se actualizan)
-   - Manejo de errores si el ID no existe o los datos son inválidos
-   - Vista EJS que reutiliza el formulario de creación con título "Editar reserva"
-
-2. FUNCIONALIDAD DE ELIMINACIÓN (DELETE)
-   - Endpoint: DELETE /reservas/:id (HTML) y DELETE /api/reservas/:id (JSON)
-   - Elimina una reserva por su ID con confirmación JavaScript
-   - Después de eliminar, muestra la lista actualizada con mensaje "Reserva eliminada correctamente."
-   - Manejo de error si el ID no existe
-
-ARQUITECTURA DEL SISTEMA:
-El proyecto mantiene la misma estructura del tp-08 (Express 5 + Mongoose + MongoDB Atlas):
-- Controladores: Lógica de negocio para vistas HTML y API JSON
-- Servicios: Capa intermedia que comunica con el modelo de Mongoose
-- Rutas: Definición de endpoints HTTP
-- Modelos: Esquemas Mongoose con validación de campos
-- Middleware: Validación de datos y manejo de errores
-
-ARCHIVOS CLAVE:
-
-tp-09/
-├── package.json          # Configuración del proyecto con scripts
-├── .env                 # Variables de entorno (PORT, MONGODB_URI)
-├── src/
-│   ├── config/          # Configuración (entorno, base-datos)
-│   ├── modelos/         # Esquemas Mongoose y catálogos
-│   ├── servicios/       # Lógica de negocio (actualizar/eliminar)
-│   ├── controladores/   # Controladores HTML y API
-│   ├── rutas/           # Rutas Express (PUT y DELETE añadidos)
-│   └── middleware/      # Validación de datos
-├── views/               # Plantillas EJS (nueva, detalle, lista)
-├── public/              # CSS stylesheet
-└── scripts/             # Comandos CLI para testing
-
-SCRIPTS DE LINEA DE COMANDOS (CLS):
-Incluidos para testing manual:
-- npm run crear - Crear una reserva nueva
-- npm run listar - Listar todas las reservas (opcionalmente filtrar por sala)
-- npm run actualizar - Actualizar una reserva por ID
-- npm run eliminar - Eliminar una reserva por ID
-- npm run comprobar-conexion - Verificar conexión a MongoDB
-
-CARACTERÍSTICAS TÉCNICAS:
-- Express 5 con enrutamiento nativo de promesas
-- Mongoose 9 con esquemas validados
-- MongoDB Atlas como base de datos
-- EJS para vistas HTML
-- Validación de esquema: campos obligatorios, enum (salas/turnos/estados),
-  rango de personas (1-6), formato de email
-- Manejo de errores: ErrorEntrada (400), NoEncontrado (404), errores de validación
-
-CÓMO EJECUTAR EL PROYECTO:
-
-1. Instalar dependencias:
-   npm install
-
-2. Configurar el archivo .env:
    PORT=3000
-   MONGODB_URI=mongodb+srv://usuario:contraseña@cluster0.example.mongodb.net/tp09
+   MONGODB_URI=mongodb+srv://usuario:contrasena@cluster0.xxx.mongodb.net/reservas_salas_u9?retryWrites=true&w=majority
 
-3. Iniciar el servidor:
-   npm start
+3) DNS: en src/config/base-datos.js se fijan resolutores públicos
+   (dns.setServers ["8.8.8.8","1.1.1.1"]) para la resolución SRV/TXT de Atlas.
+   Es el ajuste de DNS autorizado: afecta solo la resolución de Node.
 
-4. Probar las nuevas funcionalidades:
-   - Actualizar: npm run actualizar (ingresar ID y nuevos datos)
-   - Eliminar: npm run eliminar (ingresar ID de la reserva a borrar)
+INICIO
+------
+- npm start          (conecta a MongoDB y recién entonces escucha el puerto)
+- npm run dev        (con --watch)
+- npm run comprobar-conexion   (CLI: conecta, informa y CIERRA la conexión)
+- npm run crear / listar / actualizar / eliminar   (CLI, conectan y desconectan)
 
-DIFERENCIAS CON tp-08:
-- Se añadieron los métodos actualizar() y eliminar() en src/servicios/reservas.js
-- Se agregaron rutas PUT /reservas/:id y DELETE /reservas/:id en src/rutas/reservas.js
-- Se añadieron controladores actualizar y eliminar en src/controladores/reservas.js
-- Se incluyó middleware validarEstado para validación de updates parciales
-- Las vistas reutilizan nueva.ejs con título "Editar reserva" para la actualización
+El arranque es posterior a la conexión: si MongoDB no responde, el puerto no
+se abre. El cierre por SIGINT/SIGTERM cierra primero el servidor y después la
+conexión. No se insertan ni borran datos automáticamente al iniciar ni al
+listar (sin semillas automáticas).
 
-CONCLUSIONES:
-El trabajo práctico 09 completó exitosamente la funcionalidad solicitada en el PDF
-seman-09-trabajo-practico-09, añadiendo las capacidades de actualización y
-eliminación de reservas de salas al sistema existente, manteniendo la consistencia
-architectónica con el trabajo práctico 08 y utilizando las tecnologías
-correspondientes (Express 5, Mongoose 9, MongoDB Atlas).
+CAPAS (CommonJS)
+----------------
+- src/config/     entorno (.env) y conexión a MongoDB
+- src/modelos/    esquema Mongoose "Reserva" (colección "reservas") y catálogos
+- src/servicios/  lógica de datos (no conoce req/res); construye los cambios
+                  con lista blanca propia, nunca copia req.body completo
+- src/controladores/  HTTP para sitio HTML y para API JSON
+- src/rutas/      enrutadores /reservas y /api
+- src/middleware/ validación de cuerpos (reservas.js, api.js) y manejo de
+                  errores JSON/HTML (errores.js, módulo común con ErrorEntrada
+                  -> 400, NoEncontrado -> 404, resto -> 500 sin secretos)
+- views/          plantillas EJS (layout, inicio, lista, detalle, nueva,
+                  no-encontrado, error)
+- scripts/        CLI de terminal (conectar/desconectar explícito)
+
+CAMPOS Y REGLAS (conservadas del enunciado)
+-------------------------------------------
+- estudiante: texto obligatorio, trim
+- email: texto obligatorio, trim y presencia de @
+- sala: Sala Norte | Sala Sur | Sala Multimedia
+- fecha: texto obligatorio, trim
+- turno: Mañana | Tarde | Noche
+- personas: entero entre 1 y 6 (acepta número o texto numérico no vacío;
+  nunca true, arreglos ni objetos)
+- estado: pendiente | confirmada; default "pendiente" al crear
+
+POST copia los seis campos originales e IGNORA estado y _id del cliente.
+PUT exige los SIETE campos editables (incluido estado), sin completar
+omisiones con defaults. PATCH admite SOLO personas y estado, con al menos uno.
+En PUT/PATCH se rechazan campos desconocidos, _id, operadores (claves $...),
+cuerpos ausentes, arreglos y valores numéricos inadecuados, ANTES de tocar el
+documento. No se agregan validaciones de calendario, disponibilidad,
+solapamiento ni unicidad.
+
+CONTRATOS HTTP
+--------------
+- POST   /api/reservas        201 + recurso + Location (estado "pendiente")
+- GET    /api/reservas        200 con un ARREGLO (sin metadatos nuevos)
+- GET    /api/reservas/:id    200 y recurso, o 404 JSON
+- PUT    /api/reservas/:id    200, reemplazo completo, MISMO ID
+- PATCH  /api/reservas/:id    200, cambios parciales (personas/estado), mismo ID
+- DELETE /api/reservas/:id    204 SIN CUERPO si eliminó un documento
+- ID mal formado                     -> 400 JSON
+- ID válido ausente (GET/PUT/PATCH/DELETE) -> 404 JSON, sin upsert
+- Entrada inválida / JSON roto / cuerpo ausente -> 400 JSON sin modificar datos
+- Fallo inesperado                   -> 500 JSON seguro (sin trazas ni secretos)
+- Ruta de API desconocida            -> 404 JSON
+
+Detalles de implementación:
+- El middleware de errores de cuatro parámetros se registra después de las
+  rutas y distingue API (JSON) de sitio (HTML).
+- El servicio usa lista blanca: reemplazar() (PUT, siete campos) y
+  actualizarParcial() (PATCH, solo campos presentes). Ambos buscan el
+  documento, conservan el ID y guardan con runValidators:true devolviendo el
+  documento posterior. upsert:false: actualizar un ID ausente no crea nada.
+- Actualizar el estado confirma la reserva por decisión explícita; no
+  comprueba condiciones extra.
+- DELETE hace BORRADO FÍSICO de un solo documento (findByIdAndDelete): un
+  segundo DELETE y un GET posterior devuelven 404. Esto es distinto de cambiar
+  el estado: la baja real quita el documento de la colección; el cambio de
+  estado mantiene el documento con "pendiente"/"confirmada". No hay borrado
+  masivo ni ruta para vaciar datos.
+
+SOLICITUDES POSTMAN
+-------------------
+En GET y DELETE dejar Body en "none". En POST, PUT y PATCH usar Body, raw,
+JSON y verificar Content-Type: application/json.
+
+1) POST http://localhost:3000/api/reservas con:
+   {
+     "estudiante": "Ana Ejemplo",
+     "email": "ana@example.com",
+     "sala": "Sala Norte",
+     "fecha": "2026-10-28",
+     "turno": "Mañana",
+     "personas": 2
+   }
+   -> 201, ID en el cuerpo y Location: /api/reservas/ID.
+
+2) PUT http://localhost:3000/api/reservas/ID_RECIBIDO con los seis campos
+   anteriores más "estado": "confirmada" -> 200, mismo ID, siete valores.
+
+3) PATCH a la misma URL con { "personas": 3 } -> 200, personas 3 y el resto
+   conservado. Probar también { "estado": "pendiente" }.
+
+4) DELETE http://localhost:3000/api/reservas/ID_RECIBIDO -> 204 sin cuerpo;
+   repetir -> 404; GET posterior -> 404; el listado baja en uno.
+
+MATRIZ DE PRUEBAS OBSERVADAS
+----------------------------
+Ejecutada contra reservas_salas_u9.reservas con el servidor real. Cantidades
+de la colección antes/después de cada bloque.
+
+| Caso                                        | Resultado observado                     |
+|---------------------------------------------|-----------------------------------------|
+| Inicio de colección                          | 0 reservas                              |
+| POST válido                                  | 201, Location /api/reservas/6af212e5a5fe9bec76110888, estado "pendiente". Colección: 1 |
+| POST con estado y _id del cliente            | 201 pero estado "pendiente" e ID propio: estado/_id ignorados |
+| PUT completo (7 campos)                      | 200, mismo ID, sala=Sala Multimedia, turno=Noche, personas=5, estado=confirmada |
+| PUT incompleto (falta fecha)                 | 400 "El campo fecha es obligatorio..."; GET posterior intacto (sala=Sala Multimedia) |
+| PUT con campo extra + _id                    | 400 ("Campo desconocido: extra.", "_id" no modificable) |
+| PUT con $set                                 | 400 ("No se permiten operadores...")    |
+| PATCH {personas:3}                           | 200, personas=3; estado y sala conservados |
+| PATCH {estado:"pendiente"}                   | 200, estado=pendiente; personas=3 conservadas |
+| PATCH {} (vacío)                             | 400 "Debe indicar al menos un campo..." |
+| PATCH con campo extra (email)                | 400 "Campo desconocido: email."         |
+| PATCH con _id                                | 400                                     |
+| PATCH con $set                               | 400                                     |
+| PATCH personas 0 / 7 / 2.5 / true / ["a"] / {"n":1} / "" | 400 en todos, sin modificar  |
+| PATCH estado "cancelada"                     | 400 (enum inválido)                     |
+| GET /api/reservas                            | 200, arreglo puro                       |
+| GET ID mal formado (abc)                     | 400 JSON                                |
+| PUT ID válido ausente (5f1a...d1e)           | 404 JSON; total sin cambios (no crea)   |
+| PATCH ID válido ausente                      | 404 JSON                                |
+| POST JSON mal formado                        | 400 JSON                                |
+| POST sin cuerpo                              | 400 JSON                                |
+| GET /api/otra (ruta desconocida)             | 404 JSON {"error":"Ruta de API no encontrada"} |
+| DELETE existente (6af212e5...88)             | 204 sin cuerpo; colección: 2 -> 1       |
+| DELETE repetido                              | 404 JSON                                |
+| GET posterior al DELETE                      | 404 JSON                                |
+| Listado tras DELETE                          | 1 reserva (una menos); las otras se conservan |
+
+Persistencia tras reinicio (misma base, datos preparados antes de reiniciar):
+- Reserva 6af212e5a5fe9bec76110889 con PATCH {personas:6, estado:"confirmada"};
+  se detuvo el servidor (Ctrl+C / SIGINT) y se volvió a iniciar: GET devuelve
+  200 con personas=6 y estado=confirmada.
+- Reserva 6af212e5a5fe9bec76110888 eliminada antes de reiniciar: tras el
+  reinicio el GET sigue devolviendo 404.
+- /estado refleja la cantidad real de MongoDB y coincide con el listado.
+
+Sitio HTML (conservado):
+- GET / y GET /reservas: listado (arreglo, sin metadatos nuevos).
+- GET /reservas/nueva: formulario con action="/reservas"; envío válido ->
+  302 con Location /reservas/ID (comprobado con respuesta HTTP cruda:
+  "HTTP/1.1 302 Found / Location: /reservas/6af2..."); envío inválido ->
+  400 con errores y valores conservados.
+- GET /reservas/:id: detalle; ID inexistente o mal formado -> 404 HTML.
+- Los cambios hechos por la API se ven en el listado y el detalle HTML.
+
+CALIDAD
+-------
+- npm run format / format:check (Prettier sobre src y scripts)
+- npm run lint / npm run check   (ESLint flat config + Prettier check)
+- Última ejecución de npm run check: sin errores.
+
+LISTA ANTES DE ENTREGAR (verificada)
+------------------------------------
+- POST crea con estado "pendiente" y no acepta estado ni _id.
+- PUT exige los siete campos; PATCH solo personas/estado.
+- Los rechazos (400/404) no modifican ni crean recursos.
+- DELETE elimina solo el ID elegido y responde 204 sin cuerpo.
+- Listado API y HTML devuelven arreglos simples.
+- GET individual permite comprobar PUT, PATCH y la ausencia tras DELETE.
+- Los cambios sobreviven al reinicio y /estado refleja MongoDB.
+- Sin secretos ni node_modules en el repositorio (.gitignore + .env.example).

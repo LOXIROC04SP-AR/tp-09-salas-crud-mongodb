@@ -1,4 +1,8 @@
-const { conectar, desconectar, describirError } = require('../src/config/base-datos');
+const {
+  conectar,
+  desconectar,
+  describirError,
+} = require("../src/config/base-datos");
 
 async function main() {
   try {

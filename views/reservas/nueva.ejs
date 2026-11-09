@@ -8,7 +8,7 @@
   </ul>
 <% } %>
 
-<form method="POST">
+<form method="POST" action="/reservas">
   <div class="campo">
     <label for="estudiante">Estudiante:</label>
     <input type="text" id="estudiante" name="estudiante" required value="<%= datos.estudiante %>">
@@ -22,7 +22,7 @@
   <div class="campo">
     <label for="sala">Sala:</label>
     <select id="sala" name="sala">
-      <% salasPermitidas.forEach(function(sala) { %>
+      <% salas.forEach(function(sala) { %>
         <option value="<%= sala %>" <%= sala === datos.sala ? 'selected' : '' %>><%= sala %></option>
       <% }); %>
     </select>
@@ -36,7 +36,7 @@
   <div class="campo">
     <label for="turno">Turno:</label>
     <select id="turno" name="turno">
-      <% turnosPermitidos.forEach(function(turno) { %>
+      <% turnos.forEach(function(turno) { %>
         <option value="<%= turno %>" <%= turno === datos.turno ? 'selected' : '' %>><%= turno %></option>
       <% }); %>
     </select>
@@ -47,6 +47,6 @@
     <input type="number" id="personas" name="personas" min="1" max="6" required value="<%= datos.personas %>">
   </div>
 
-  <button type="submit" class="btn-submit"><%= titulo %></button>
+  <button type="submit" class="btn-submit">Guardar reserva</button>
   <a href="/reservas" class="btn-cancel">Cancelar</a>
 </form>

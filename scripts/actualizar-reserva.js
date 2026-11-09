@@ -1,28 +1,38 @@
-const { crearServicioReservas } = require('../src/servicios/reservas');
-const servicio = crearServicioReservas();
+const {
+  conectar,
+  desconectar,
+  describirError,
+} = require("../src/config/base-datos");
+const { crearServicioReservas } = require("../src/servicios/reservas");
 
-async function actualizar() {
-  const id = process.argv[3];
+async function main() {
+  const id = process.argv[2];
   if (!id) {
-    console.error("Uso: node scripts/actualizar-reserva.js <id-reserva>");
+    console.error(
+      "Uso: node --env-file=.env scripts/actualizar-reserva.js <id-reserva> <estudiante> <email> <sala> <fecha> <turno> <personas> <estado>",
+    );
     process.exit(1);
   }
 
+  // PUT por CLI: reemplazo completo de los siete campos editables.
   const datos = {
-    estudiante: process.argv[4] || undefined,
-    email: process.argv[5] || undefined,
-    sala: process.argv[6] || undefined,
-    fecha: process.argv[7] || undefined,
-    turno: process.argv[8] || undefined,
-    personas: process.argv[9] ? Number(process.argv[9]) : undefined,
-    estado: process.argv[10] || undefined,
+    estudiante: process.argv[3],
+    email: process.argv[4],
+    sala: process.argv[5],
+    fecha: process.argv[6],
+    turno: process.argv[7],
+    personas: Number(process.argv[8]),
+    estado: process.argv[9],
   };
 
+  await conectar();
   try {
-    const reserva = await servicio.actualizar(id, datos);
-    console.log("Reserva actualizada:");
+    const servicio = crearServicioReservas();
+    const reserva = await servicio.reemplazar(id, datos);
+    console.log("Reserva actualizada (PUT completo):");
     console.log(`ID: ${reserva.id}`);
     console.log(`Estudiante: ${reserva.estudiante}`);
+    console.log(`Email: ${reserva.email}`);
     console.log(`Sala: ${reserva.sala}`);
     console.log(`Fecha: ${reserva.fecha}`);
     console.log(`Turno: ${reserva.turno}`);
@@ -30,14 +40,18 @@ async function actualizar() {
     console.log(`Estado: ${reserva.estado}`);
   } catch (error) {
     console.error("Error al actualizar reserva:", error.message);
-    if (error.name === "ErrorEntrada") {
-      console.error("Detalles:", error.detalles);
-    }
+    if (error.detalles) console.error("Detalles:", error.detalles);
     if (error.name === "NoEncontrado") {
       console.error("La reserva con ID", id, "no existe.");
     }
-    process.exit(1);
+    process.exitCode = 1;
+  } finally {
+    await desconectar();
+    console.log("Conexión cerrada.");
   }
 }
 
-actualizar().then(() => process.exit(0)).catch(err => { console.error(err); process.exit(1); });
+main().catch((error) => {
+  console.error(describirError(error));
+  process.exit(1);
+});

@@ -1,5 +1,9 @@
 const express = require("express");
-const { validarCuerpoApi, validarActualizacionApi } = require("../middleware/api");
+const {
+  validarCuerpoApi,
+  validarReemplazoApi,
+  validarCambioParcialApi,
+} = require("../middleware/api");
 const { apiNoEncontrada } = require("../middleware/errores");
 
 function crearRouterApi(controlador) {
@@ -10,10 +14,16 @@ function crearRouterApi(controlador) {
   router.get("/reservas", controlador.listar);
   router.get("/reservas/:id", controlador.obtener);
   router.post("/reservas", validarCuerpoApi, controlador.crear);
-  router.put("/reservas/:id", validarCuerpoApi, validarActualizacionApi, controlador.actualizar);
-  router.delete("/reservas/:id", validarCuerpoApi, controlador.eliminar);
+  router.put("/reservas/:id", validarReemplazoApi, controlador.actualizar);
+  router.patch(
+    "/reservas/:id",
+    validarCambioParcialApi,
+    controlador.actualizarParcial,
+  );
+  // DELETE sin middleware de cuerpo: no necesita datos para borrar por ID.
+  router.delete("/reservas/:id", controlador.eliminar);
 
-  // Ruta API desconocida: JSON, no HTML. No hay PUT, PATCH ni DELETE.
+  // Ruta API desconocida: JSON, no HTML.
   router.use(apiNoEncontrada);
 
   return router;

@@ -34,10 +34,10 @@ function crearApp({ servicio, configuracion }) {
   app.use(expressLayouts);
   app.use(express.static(path.join(raiz, "public")));
 
-  routerApi = crearRouterApi(controladorApi);
+  const routerApi = crearRouterApi(controladorApi);
   app.use("/api", routerApi);
 
-  routerReservas = crearRouterReservas(controlador);
+  const routerReservas = crearRouterReservas(controlador);
   app.use("/reservas", routerReservas);
 
   app.get("/", (req, res) => {

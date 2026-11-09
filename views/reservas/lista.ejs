@@ -1,6 +1,6 @@
 <h2>Lista de reservas</h2>
 
-<% if (mensaje) { %>
+<% if (typeof mensaje !== "undefined" && mensaje) { %>
   <div class="mensaje"><%= mensaje %></div>
 <% } %>
 
@@ -30,13 +30,7 @@
           <td><%= reserva.turno %></td>
           <td><%= reserva.personas %></td>
           <td><%= reserva.estado %></td>
-          <td>
-            <a href="/reservas/<%= reserva.id %>" class="btn">Ver</a>
-            <a href="/reservas/<%= reserva.id %>/editar" class="btn">Editar</a>
-            <form action="/reservas/<%= reserva.id %>?_method=DELETE" method="POST" style="display:inline">
-              <button type="submit" class="btn-elimina" onclick="return confirm('¿Seguro que desea eliminar esta reserva?')">Eliminar</button>
-            </form>
-          </td>
+          <td><a href="/reservas/<%= reserva.id %>" class="btn">Ver</a></td>
         </tr>
       <% }); %>
     </tbody>

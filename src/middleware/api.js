@@ -1,8 +1,14 @@
 const { ErrorEntrada } = require("../errores");
-const { extraerCampos } = require("./reservas");
+const {
+  extraerCampos,
+  extraerReemplazo,
+  extraerCambioParcial,
+} = require("./reservas");
 
-// API JSON: deja los datos saneados en req.reservaValidada.
+// Cada middleware deja los datos saneados en req.reservaValidada.
 // Un cuerpo ausente o de otro tipo deja req.body sin definir y se rechaza aqui.
+
+// POST: seis campos originales; ignora estado/_id del cliente.
 function validarCuerpoApi(req, res, next) {
   const { datos, errores } = extraerCampos(req.body);
   if (errores.length > 0) {
@@ -12,9 +18,9 @@ function validarCuerpoApi(req, res, next) {
   next();
 }
 
-// Validar actualización parcia para API
-function validarActualizacionApi(req, res, next) {
-  const { datos, errores } = extraerCampos(req.body);
+// PUT: exige los siete campos editables; rechaza extras, _id y operadores.
+function validarReemplazoApi(req, res, next) {
+  const { datos, errores } = extraerReemplazo(req.body);
   if (errores.length > 0) {
     return next(new ErrorEntrada("Datos de actualización inválidos", errores));
   }
@@ -22,4 +28,18 @@ function validarActualizacionApi(req, res, next) {
   next();
 }
 
-module.exports = { validarCuerpoApi, validarActualizacionApi };
+// PATCH: solo personas/estado, con al menos uno presente.
+function validarCambioParcialApi(req, res, next) {
+  const { datos, errores } = extraerCambioParcial(req.body);
+  if (errores.length > 0) {
+    return next(new ErrorEntrada("Datos de actualización inválidos", errores));
+  }
+  req.reservaValidada = datos;
+  next();
+}
+
+module.exports = {
+  validarCuerpoApi,
+  validarReemplazoApi,
+  validarCambioParcialApi,
+};
