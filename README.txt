@@ -64,42 +64,50 @@ CAMPOS Y REGLAS (conservadas del enunciado)
 -------------------------------------------
 - estudiante: texto obligatorio, trim
 - email: texto obligatorio, trim y presencia de @
-- sala: Sala Norte | Sala Sur | Sala Multimedia
-- fecha: texto obligatorio, trim
-- turno: Mañana | Tarde | Noche
-- personas: entero entre 1 y 6 (acepta número o texto numérico no vacío;
-  nunca true, arreglos ni objetos)
-- estado: pendiente | confirmada; default "pendiente" al crear
+- sala: enum ["Sala Norte", "Sala Sur", "Sala Multimedia"]
+- fecha: texto obligatorio, trim (NO se valida calendario ni futuro)
+- turno: enum ["Mañana", "Tarde", "Noche"]
+- personas: entero entre 1 y 6. Se acepta número o texto numérico no vacío;
+  NUNCA true, arreglos, objetos ni vacío. Se comprueba finitud, entero y rango.
+- estado: enum ["pendiente", "confirmada"]; default "pendiente" al crear
+
+No se agregan validaciones de calendario, disponibilidad, solapamiento, cupo
+compartido ni unicidad.
 
 POST copia los seis campos originales e IGNORA estado y _id del cliente.
 PUT exige los SIETE campos editables (incluido estado), sin completar
-omisiones con defaults. PATCH admite SOLO personas y estado, con al menos uno.
-En PUT/PATCH se rechazan campos desconocidos, _id, operadores (claves $...),
-cuerpos ausentes, arreglos y valores numéricos inadecuados, ANTES de tocar el
-documento. No se agregan validaciones de calendario, disponibilidad,
-solapamiento ni unicidad.
+omisiones con defaults; si falta uno, 400.
+PATCH admite SOLO personas y estado, con al menos uno presente.
+En PUT/PATCH se rechazan con 400: campos desconocidos, _id, operadores
+(claves que empiezan con $ o contienen puntos), cuerpos ausentes, arreglos
+como cuerpo raíz, y tipos numéricos inadecuados. El rechazo NO modifica datos.
 
 CONTRATOS HTTP
 --------------
-- POST   /api/reservas        201 + recurso + Location (estado "pendiente")
-- GET    /api/reservas        200 con un ARREGLO (sin metadatos nuevos)
-- GET    /api/reservas/:id    200 y recurso, o 404 JSON
-- PUT    /api/reservas/:id    200, reemplazo completo, MISMO ID
-- PATCH  /api/reservas/:id    200, cambios parciales (personas/estado), mismo ID
-- DELETE /api/reservas/:id    204 SIN CUERPO si eliminó un documento
-- ID mal formado                     -> 400 JSON
-- ID válido ausente (GET/PUT/PATCH/DELETE) -> 404 JSON, sin upsert
-- Entrada inválida / JSON roto / cuerpo ausente -> 400 JSON sin modificar datos
-- Fallo inesperado                   -> 500 JSON seguro (sin trazas ni secretos)
-- Ruta de API desconocida            -> 404 JSON
+Método    Rutas                     Resultado
+--------  -------------------------   -------------------------
+POST      /api/reservas             201 + recurso + Location
+GET       /api/reservas           200 con un ARREGLO puro
+GET       /api/reservas/:id       200 y recurso | 404 JSON
+PUT       /api/reservas/:id       200 reemplazo completo MISMO ID
+PATCH     /api/reservas/:id       200 cambios parciales MISMO ID
+DELETE    /api/reservas/:id       204 SIN CUERPO si borró
+
+Errores HTTP
+------------
+- ID mal formado                                 -> 400 JSON
+- ID válido ausente (GET/PUT/PATCH/DELETE)       -> 404 JSON sin upsert
+- Entrada inválida, JSON roto, cuerpo ausente    -> 400 JSON sin modificar
+- Fallo inesperado                               -> 500 JSON seguro (sin secretos)
+- Ruta de API desconocida                        -> 404 JSON
 
 Detalles de implementación:
 - El middleware de errores de cuatro parámetros se registra después de las
   rutas y distingue API (JSON) de sitio (HTML).
-- El servicio usa lista blanca: reemplazar() (PUT, siete campos) y
+- El servicio usa lista blanca propia: reemplazar() (PUT, siete campos) y
   actualizarParcial() (PATCH, solo campos presentes). Ambos buscan el
-  documento, conservan el ID y guardan con runValidators:true devolviendo el
-  documento posterior. upsert:false: actualizar un ID ausente no crea nada.
+  documento, conservan el ID y guardan con runValidators:true, devolviendo el
+  documento posterior. upsert:false: actualizar un ID ausente NO crea nada.
 - Actualizar el estado confirma la reserva por decisión explícita; no
   comprueba condiciones extra.
 - DELETE hace BORRADO FÍSICO de un solo documento (findByIdAndDelete): un
@@ -172,7 +180,7 @@ Persistencia tras reinicio (misma base, datos preparados antes de reiniciar):
   se detuvo el servidor (Ctrl+C / SIGINT) y se volvió a iniciar: GET devuelve
   200 con personas=6 y estado=confirmada.
 - Reserva 6af212e5a5fe9bec76110888 eliminada antes de reiniciar: tras el
-  reinicio el GET sigue devolviendo 404.
+  reinicio el GET sigue devolriendo 404.
 - /estado refleja la cantidad real de MongoDB y coincide con el listado.
 
 Sitio HTML (conservado):
